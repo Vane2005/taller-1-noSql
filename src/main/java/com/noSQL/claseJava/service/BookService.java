@@ -10,6 +10,7 @@ import com.noSQL.claseJava.repository.AuthorRepository;
 import com.noSQL.claseJava.repository.EditorialRepository;
 import com.noSQL.claseJava.repository.CategoryRepository;
 import com.noSQL.claseJava.repository.LoanRepository;
+import com.noSQL.claseJava.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -27,6 +28,7 @@ public class BookService {
     private final EditorialRepository editorialRepository;
     private final CategoryRepository categoryRepository;
     private final LoanRepository loanRepository;
+    private final ReviewRepository reviewRepository;
 
     @CacheEvict(value = "books", allEntries = true)
     public Book createBook(BookRequest request) {
@@ -206,6 +208,9 @@ public class BookService {
 
                 // Actualizar en Loans
                 updateBookTitleInLoans(id, newTitle);
+
+                // Actualizar en Reviews
+                updateBookInfoInReviews(id, newTitle);
             }
 
             return book;
@@ -218,6 +223,15 @@ public class BookService {
             if (loan.getBookLoan() != null) {
                 loan.getBookLoan().setTitle(newTitle);
                 loanRepository.save(loan);
+            }
+        });
+    }
+
+    private void updateBookInfoInReviews(String bookId, String newTitle) {
+        reviewRepository.findByBookBookId(bookId).forEach(review -> {
+            if (review.getBook() != null) {
+                review.getBook().setTitle(newTitle);
+                reviewRepository.save(review);
             }
         });
     }
@@ -279,8 +293,10 @@ public class BookService {
                     removeBookFromCategory(cat.getId(), id);
                 }
             }
-            // remove loans associated with this book
+            // Delete loans associated with this book
             loanRepository.deleteByBookLoanId(id);
+            // Delete reviews associated with this book
+            reviewRepository.deleteByBookBookId(id);
 
             bookRepository.deleteById(id);
             return true;

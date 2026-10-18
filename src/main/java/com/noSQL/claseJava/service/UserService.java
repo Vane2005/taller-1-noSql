@@ -3,6 +3,7 @@ package com.noSQL.claseJava.service;
 import com.noSQL.claseJava.dto.UserRequest;
 import com.noSQL.claseJava.entity.User;
 import com.noSQL.claseJava.repository.LoanRepository;
+import com.noSQL.claseJava.repository.ReviewRepository;
 import com.noSQL.claseJava.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final LoanRepository loanRepository;
+    private final ReviewRepository reviewRepository;
 
     public User createUser(UserRequest request){
 
@@ -105,7 +107,14 @@ public class UserService {
     }
 
     public void updateUserInReview(String userId, String newName, String newEmail, String newTelephone){
-
+        reviewRepository.findByUserUserId(userId).forEach(review -> {
+            if (review.getUser() != null) {
+                review.getUser().setName(newName);
+                review.getUser().setEmail(newEmail);
+                review.getUser().setTelephone(newTelephone);
+                reviewRepository.save(review);
+            }
+        });
     }
 
     public void updateNameUserInFavorites(String userId, String newName, String newEmail, String newTelephone){
@@ -118,6 +127,7 @@ public class UserService {
             User user =  findUser.get();
 
             //Eliminar user en review
+            reviewRepository.deleteByUserUserId(idUser);
 
             //Eliminar user en Loan
             loanRepository.deleteByUserLoanId(idUser);

@@ -3,8 +3,10 @@ package com.noSQL.claseJava.service;
 import com.noSQL.claseJava.dto.AuthorRequest;
 import com.noSQL.claseJava.entity.Author;
 import com.noSQL.claseJava.entity.Book;
+import com.noSQL.claseJava.entity.Review;
 import com.noSQL.claseJava.repository.AuthorRepository;
 import com.noSQL.claseJava.repository.BookRepository;
+import com.noSQL.claseJava.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,7 @@ public class AuthorService {
 
     private final AuthorRepository authorRepository;
     private final BookRepository  bookRepository;
+    private final ReviewRepository reviewRepository;
 
     public Author createAuthor(AuthorRequest request) {
         Author author = Author.builder()
@@ -75,6 +78,9 @@ public class AuthorService {
 
                         // Actualizar fullName en Favorites
                         updateFullNameAuthorInFavorites(book.getBookId(), newFullName);
+
+                        // Actualizar en Reviews
+                        updateAuthorInfoInReviews(author.getId(), newFullName, request.getNationality());
                     }
                 }
 
@@ -110,6 +116,16 @@ public class AuthorService {
 
     }
 
+    public void updateAuthorInfoInReviews(String authorId, String newName, String newNationality) {
+        reviewRepository.findAll().forEach(review -> {
+            if (review.getBook() != null && review.getBook().getAuthor() != null && review.getBook().getAuthor().getAuthorId().equals(authorId)) {
+                review.getBook().getAuthor().setName(newName);
+                review.getBook().getAuthor().setNationality(newNationality);
+                reviewRepository.save(review);
+            }
+        });
+    }
+
     public boolean deleteAuthor(String id) {
 
         Optional<Author> author = authorRepository.findById(id);
@@ -121,12 +137,16 @@ public class AuthorService {
             // Remove from Book
             if(author1.getBooks() != null){
                 for (Author.BookReference book : author1.getBooks()) {
-                    bookRepository.deleteById(book.getBookId());
+                    deleteAuthorFromBook(book.getBookId());
                 }
             }
 
             // Remove from Review
-
+            reviewRepository.findAll().forEach(review -> {
+                if (review.getBook() != null && review.getBook().getAuthor() != null && review.getBook().getAuthor().getAuthorId().equals(id)) {
+                    deleteAuthorFromReview(review.getId());
+                }
+            });
 
             //Remove from Favorites
 
@@ -150,8 +170,16 @@ public class AuthorService {
         }
     }
 
-    public void deleteAuthorFromReviwe(String idBook){
+    public void deleteAuthorFromReview(String idReview){
+        Optional<Review> review = reviewRepository.findById(idReview);
 
+        if (review.isPresent()) {
+            Review rev1 = review.get();
+            if (rev1.getBook().getAuthor() != null) {
+                rev1.getBook().setAuthor(null);
+                reviewRepository.save(rev1);
+            }
+        }
     }
 
     public void deleteAuthorFromFavorites(String idBook){
