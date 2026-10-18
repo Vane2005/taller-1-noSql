@@ -1,0 +1,161 @@
+package com.noSQL.claseJava.service;
+
+import com.noSQL.claseJava.dto.AuthorRequest;
+import com.noSQL.claseJava.entity.Author;
+import com.noSQL.claseJava.entity.Book;
+import com.noSQL.claseJava.repository.AuthorRepository;
+import com.noSQL.claseJava.repository.BookRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@RequiredArgsConstructor
+@Service
+public class AuthorService {
+
+    private final AuthorRepository authorRepository;
+    private final BookRepository  bookRepository;
+
+    public Author createAuthor(AuthorRequest request) {
+        Author author = Author.builder()
+                .fullName(request.getFullName())
+                .nationality(request.getNationality())
+                .biography(request.getBiography())
+                .books(request.getBooks())
+                .build();
+        return authorRepository.save(author);
+    }
+
+    public List<Author> getAllAuthors() {
+        return authorRepository.findAll();
+    }
+
+    public Optional<Author> getAuthorById(String id) {
+        return authorRepository.findById(id);
+    }
+
+    public Optional<Author> getAuthorByName(String fullName) {
+        return authorRepository.findByFullName(fullName);
+    }
+
+    public List<Author.BookReference> getAuthorBooks(String authorId) {
+        Optional<Author> author = authorRepository.findById(authorId);
+        if (author.isPresent() && author.get().getBooks() != null) {
+            return author.get().getBooks();
+        }
+        return List.of();
+    }
+
+    public Author updateAuthor(String id, AuthorRequest request) {
+        Optional<Author> existingAuthor = authorRepository.findById(id);
+        if (existingAuthor.isPresent()) {
+
+            Author author = existingAuthor.get();
+
+            String oldFullName = author.getFullName();
+            String newFullName =  request.getFullName();
+
+            author.setFullName(request.getFullName());
+            author.setNationality(request.getNationality());
+            author.setBiography(request.getBiography());
+            Author auth = authorRepository.save(author);
+
+            if (!oldFullName.equals(newFullName)) {
+
+                if(author.getBooks() != null){
+
+                    for (Author.BookReference book : author.getBooks()) {
+                        // Actualizar fullName en Book
+                        updateFullNameAuthorInBook(book.getBookId(), newFullName);
+
+                        // Actualizar fullName en Review
+                        updateFullNameAuthorInReview(book.getBookId(), newFullName);
+
+                        // Actualizar fullName en Favorites
+                        updateFullNameAuthorInFavorites(book.getBookId(), newFullName);
+                    }
+                }
+
+            }
+
+            return auth;
+
+        }
+        return null;
+    }
+
+
+    // Metodos auxiliares de actualizacion
+
+    public void updateFullNameAuthorInBook(String bookId, String newFullName) {
+        Optional<Book> book = bookRepository.findById(bookId);
+
+        if (book.isPresent()) {
+
+            Book book1 = book.get();
+            if(book1.getAuthor() != null){
+                book1.getAuthor().setFullName(newFullName);
+            }
+            bookRepository.save(book1);
+        }
+    }
+
+    public void updateFullNameAuthorInReview(String bookId, String newFullName){
+
+    }
+
+    public void updateFullNameAuthorInFavorites(String bookId, String newFullName){
+
+    }
+
+    public boolean deleteAuthor(String id) {
+
+        Optional<Author> author = authorRepository.findById(id);
+
+        if (author.isPresent()) {
+
+            Author author1 = author.get();
+
+            // Remove from Book
+            if(author1.getBooks() != null){
+                for (Author.BookReference book : author1.getBooks()) {
+                    bookRepository.deleteById(book.getBookId());
+                }
+            }
+
+            // Remove from Review
+
+
+            //Remove from Favorites
+
+
+            authorRepository.delete(author1);
+            return true;
+        }
+        return false;
+    }
+
+    //Metodos auxiliares para eliminacion
+    public void deleteAuthorFromBook(String idBook) {
+        Optional<Book> book = bookRepository.findById(idBook);
+
+        if (book.isPresent()) {
+            Book book1 = book.get();
+            if (book1.getAuthor() != null) {
+                book1.setAuthor(null);
+                bookRepository.save(book1);
+            }
+        }
+    }
+
+    public void deleteAuthorFromReviwe(String idBook){
+
+    }
+
+    public void deleteAuthorFromFavorites(String idBook){
+
+    }
+
+}
