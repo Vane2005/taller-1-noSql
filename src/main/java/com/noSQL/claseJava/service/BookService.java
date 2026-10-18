@@ -9,6 +9,7 @@ import com.noSQL.claseJava.repository.BookRepository;
 import com.noSQL.claseJava.repository.AuthorRepository;
 import com.noSQL.claseJava.repository.EditorialRepository;
 import com.noSQL.claseJava.repository.CategoryRepository;
+import com.noSQL.claseJava.repository.LoanRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -25,6 +26,7 @@ public class BookService {
     private final AuthorRepository authorRepository;
     private final EditorialRepository editorialRepository;
     private final CategoryRepository categoryRepository;
+    private final LoanRepository loanRepository;
 
     @CacheEvict(value = "books", allEntries = true)
     public Book createBook(BookRequest request) {
@@ -265,6 +267,9 @@ public class BookService {
                     removeBookFromCategory(cat.getId(), id);
                 }
             }
+            // remove loans associated with this book
+            loanRepository.deleteByBookLoanId(id);
+
             bookRepository.deleteById(id);
             return true;
         }

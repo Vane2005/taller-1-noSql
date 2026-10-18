@@ -23,7 +23,7 @@ public class User implements Serializable {
     private String telephone;
 
      @Builder.Default
-    private List<activityRef> resumeActivity = new java.util.ArrayList<>();
+    private List<activityRef> resumeActivity = new java.util.ArrayList<>(5);
 
     @Data
     @AllArgsConstructor

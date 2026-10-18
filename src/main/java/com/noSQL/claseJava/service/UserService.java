@@ -2,6 +2,7 @@ package com.noSQL.claseJava.service;
 
 import com.noSQL.claseJava.dto.UserRequest;
 import com.noSQL.claseJava.entity.User;
+import com.noSQL.claseJava.repository.LoanRepository;
 import com.noSQL.claseJava.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final LoanRepository loanRepository;
 
     public User createUser(UserRequest request){
 
@@ -85,6 +87,7 @@ public class UserService {
             //Eliminar user en review
 
             //Eliminar user en Loan
+            loanRepository.deleteByUserLoanId(idUser);
 
             //Eliminar user en favorites
 
@@ -93,8 +96,6 @@ public class UserService {
         }
         return false;
     }
-
-    // Funciones auxiliares para eliminacion
 
 
 
