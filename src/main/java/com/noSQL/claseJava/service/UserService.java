@@ -65,19 +65,52 @@ public class UserService {
         if(findUser.isPresent()){
             User user = findUser.get();
 
+            String oldName = user.getName();
+            String oldEmail = user.getEmail();
+            String oldTelephone = user.getTelephone();
+
             user.setName(request.getName());
             user.setEmail(request.getEmail());
             user.setTelephone(request.getTelephone());
             user.setAddress(request.getAddress());
 
-            return userRepository.save(user);
+            User updatedUser = userRepository.save(user);
+
+            if (!oldName.equals(request.getName()) || !oldEmail.equals(request.getEmail()) || !oldTelephone.equals(request.getTelephone())) {
+                //Actualizar en Loan
+                updateUserInLoan(user.getId(), request.getName(), request.getEmail(), request.getTelephone());
+
+                // Actualizar en Review
+                updateUserInReview(user.getId(), request.getName(), request.getEmail(), request.getTelephone());
+
+                // Actualizar en Favorites
+                updateNameUserInFavorites(user.getId(), request.getName(), request.getEmail(), request.getTelephone());
+            }
+
+            return updatedUser;
         }
         return null;
     }
 
-    // Funciones auxiliares para actualizacion
+    // Funciones auxiliares para actualizaciones
+    public void updateUserInLoan(String userId, String newName, String newEmail, String newTelephone){
+        loanRepository.findByUserLoanId(userId).forEach(loan -> {
+            if (loan.getUserLoan() != null) {
+                loan.getUserLoan().setName(newName);
+                loan.getUserLoan().setEmail(newEmail);
+                loan.getUserLoan().setTelephone(newTelephone);
+                loanRepository.save(loan);
+            }
+        });
+    }
 
+    public void updateUserInReview(String userId, String newName, String newEmail, String newTelephone){
 
+    }
+
+    public void updateNameUserInFavorites(String userId, String newName, String newEmail, String newTelephone){
+
+    }
 
     public boolean deleteUser(String idUser){
         Optional<User> findUser = userRepository.findById(idUser);

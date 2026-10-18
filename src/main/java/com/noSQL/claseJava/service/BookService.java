@@ -203,11 +203,23 @@ public class BookService {
                         updateBookTitleInCategory(cat.getId(), id, newTitle);
                     }
                 }
+
+                // Actualizar en Loans
+                updateBookTitleInLoans(id, newTitle);
             }
 
             return book;
         }
         return null;
+    }
+
+    private void updateBookTitleInLoans(String bookId, String newTitle) {
+        loanRepository.findByBookLoanId(bookId).forEach(loan -> {
+            if (loan.getBookLoan() != null) {
+                loan.getBookLoan().setTitle(newTitle);
+                loanRepository.save(loan);
+            }
+        });
     }
 
 
