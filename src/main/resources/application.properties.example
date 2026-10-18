@@ -1,0 +1,11 @@
+spring.application.name=claseJava
+
+# Redis (reemplaza con tus datos reales)
+spring.data.redis.url=redis://<USUARIO>:<PASSWORD>@<HOST>:<PUERTO>
+
+spring.cache.type=redis
+spring.cache.redis.time-to-live=60000
+
+# MongoDB Atlas (reemplaza con tus datos reales)
+spring.mongodb.uri=mongodb+srv://<USUARIO>:<PASSWORD>@<CLUSTER>.mongodb.net/
+spring.mongodb.database=Libreria
