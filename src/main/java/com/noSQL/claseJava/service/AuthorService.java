@@ -3,9 +3,11 @@ package com.noSQL.claseJava.service;
 import com.noSQL.claseJava.dto.AuthorRequest;
 import com.noSQL.claseJava.entity.Author;
 import com.noSQL.claseJava.entity.Book;
+import com.noSQL.claseJava.entity.Favorite;
 import com.noSQL.claseJava.entity.Review;
 import com.noSQL.claseJava.repository.AuthorRepository;
 import com.noSQL.claseJava.repository.BookRepository;
+import com.noSQL.claseJava.repository.FavoriteRepository;
 import com.noSQL.claseJava.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,7 @@ public class AuthorService {
     private final AuthorRepository authorRepository;
     private final BookRepository  bookRepository;
     private final ReviewRepository reviewRepository;
+    private final FavoriteRepository favoriteRepository;
 
     public Author createAuthor(AuthorRequest request) {
         Author author = Author.builder()
@@ -73,11 +76,8 @@ public class AuthorService {
                         // Actualizar fullName en Book
                         updateFullNameAuthorInBook(book.getBookId(), newFullName);
 
-                        // Actualizar fullName en Review
-                        updateFullNameAuthorInReview(book.getBookId(), newFullName);
-
                         // Actualizar fullName en Favorites
-                        updateFullNameAuthorInFavorites(book.getBookId(), newFullName);
+                        updateFullNameAuthorInFavorites(author.getId(), newFullName);
 
                         // Actualizar en Reviews
                         updateAuthorInfoInReviews(author.getId(), newFullName, request.getNationality());
@@ -108,12 +108,14 @@ public class AuthorService {
         }
     }
 
-    public void updateFullNameAuthorInReview(String bookId, String newFullName){
 
-    }
-
-    public void updateFullNameAuthorInFavorites(String bookId, String newFullName){
-
+    public void updateFullNameAuthorInFavorites(String authorId, String newName){
+        favoriteRepository.findAll().forEach(favorite -> {
+            if (favorite.getFavorite() != null && favorite.getFavorite().getAuthor() != null && favorite.getFavorite().getAuthor().getId().equals(authorId)) {
+                favorite.getFavorite().getAuthor().setFullName(newName);
+                favoriteRepository.save(favorite);
+            }
+        });
     }
 
     public void updateAuthorInfoInReviews(String authorId, String newName, String newNationality) {
@@ -149,7 +151,7 @@ public class AuthorService {
             });
 
             //Remove from Favorites
-
+            deleteAuthorFromFavorites(author1.getId());
 
             authorRepository.delete(author1);
             return true;
@@ -183,7 +185,12 @@ public class AuthorService {
     }
 
     public void deleteAuthorFromFavorites(String idBook){
+        List<Favorite> favorite = favoriteRepository.findAll();
 
+        favorite.forEach(favorite1 -> {
+            favorite1.getFavorite().setAuthor(null);
+            favoriteRepository.save(favorite1);
+        });
     }
 
 }

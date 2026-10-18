@@ -9,6 +9,7 @@ import com.noSQL.claseJava.repository.BookRepository;
 import com.noSQL.claseJava.repository.AuthorRepository;
 import com.noSQL.claseJava.repository.EditorialRepository;
 import com.noSQL.claseJava.repository.CategoryRepository;
+import com.noSQL.claseJava.repository.FavoriteRepository;
 import com.noSQL.claseJava.repository.LoanRepository;
 import com.noSQL.claseJava.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class BookService {
     private final CategoryRepository categoryRepository;
     private final LoanRepository loanRepository;
     private final ReviewRepository reviewRepository;
+    private final FavoriteRepository favoriteRepository;
 
     @CacheEvict(value = "books", allEntries = true)
     public Book createBook(BookRequest request) {
@@ -211,6 +213,9 @@ public class BookService {
 
                 // Actualizar en Reviews
                 updateBookInfoInReviews(id, newTitle);
+
+                // Actualizar en Favorites
+                updateBookInfoInFavorites(id, newTitle);
             }
 
             return book;
@@ -232,6 +237,15 @@ public class BookService {
             if (review.getBook() != null) {
                 review.getBook().setTitle(newTitle);
                 reviewRepository.save(review);
+            }
+        });
+    }
+
+    private void updateBookInfoInFavorites(String bookId, String newTitle) {
+        favoriteRepository.findByFavoriteId(bookId).forEach(favorite -> {
+            if (favorite.getFavorite() != null) {
+                favorite.getFavorite().setTitle(newTitle);
+                favoriteRepository.save(favorite);
             }
         });
     }
@@ -297,6 +311,8 @@ public class BookService {
             loanRepository.deleteByBookLoanId(id);
             // Delete reviews associated with this book
             reviewRepository.deleteByBookBookId(id);
+            // Delete favorites associated with this book
+            favoriteRepository.deleteByFavoriteId(id);
 
             bookRepository.deleteById(id);
             return true;

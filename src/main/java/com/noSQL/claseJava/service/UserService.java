@@ -2,6 +2,7 @@ package com.noSQL.claseJava.service;
 
 import com.noSQL.claseJava.dto.UserRequest;
 import com.noSQL.claseJava.entity.User;
+import com.noSQL.claseJava.repository.FavoriteRepository;
 import com.noSQL.claseJava.repository.LoanRepository;
 import com.noSQL.claseJava.repository.ReviewRepository;
 import com.noSQL.claseJava.repository.UserRepository;
@@ -18,6 +19,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final LoanRepository loanRepository;
     private final ReviewRepository reviewRepository;
+    private final FavoriteRepository favoriteRepository;
 
     public User createUser(UserRequest request){
 
@@ -86,7 +88,7 @@ public class UserService {
                 updateUserInReview(user.getId(), request.getName(), request.getEmail(), request.getTelephone());
 
                 // Actualizar en Favorites
-                updateNameUserInFavorites(user.getId(), request.getName(), request.getEmail(), request.getTelephone());
+                updateNameUserInFavorites(user.getId(), request.getName());
             }
 
             return updatedUser;
@@ -117,8 +119,13 @@ public class UserService {
         });
     }
 
-    public void updateNameUserInFavorites(String userId, String newName, String newEmail, String newTelephone){
-
+    public void updateNameUserInFavorites(String userId, String newName){
+        favoriteRepository.findByUserId(userId).forEach(favorite -> {
+            if (favorite.getUser() != null) {
+                favorite.getUser().setName(newName);
+                favoriteRepository.save(favorite);
+            }
+        });
     }
 
     public boolean deleteUser(String idUser){
@@ -133,6 +140,7 @@ public class UserService {
             loanRepository.deleteByUserLoanId(idUser);
 
             //Eliminar user en favorites
+            favoriteRepository.deleteByUserId(idUser);
 
             userRepository.deleteById(idUser);
             return true;
