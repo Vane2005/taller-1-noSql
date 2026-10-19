@@ -91,6 +91,10 @@ public class ReviewService {
         return reviewRepository.findByBookBookId(bookId);
     }
 
+    public Optional<Review> getReviewByUserAndBookId(String userId, String bookId) {
+        return reviewRepository.findByUserUserIdAndBookBookId(userId, bookId);
+    }
+
     public Review updateReview(String id, ReviewRequest request) {
         Optional<Review> existingReview = reviewRepository.findById(id);
         if (existingReview.isPresent()) {

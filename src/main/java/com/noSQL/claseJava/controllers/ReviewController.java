@@ -23,6 +23,12 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.getAllReviews());
     }
 
+    @GetMapping("/user/{idUser}/book/{idBook}")
+    public ResponseEntity<Review> getReviewByUserAndBook(@PathVariable String idUser, @PathVariable String idBook) {
+        Optional<Review> review = reviewService.getReviewByUserAndBookId(idUser, idBook);
+        return review.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Review> getReviewById(@PathVariable String id) {
         Optional<Review> review = reviewService.getReviewById(id);
